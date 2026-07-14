@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ activity.name }}</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="page-header">
+            <h1>{{ activity.name }}</h1>
+            <a href="/" class="top-button">活動一覧に戻る</a>
+        </div>
+
+        {% if activity.description %}
+        <p>{{ activity.description }}</p>
+        {% endif %}
+
+        <div class="activity-actions">
+            {% if g.activity_role == 'owner' %}
+            <a href="/activities/edit/{{ activity.id }}" class="button-link">活動情報を編集</a>
+
+            <form method="post"
+                  action="/activities/delete/{{ activity.id }}"
+                  style="display:inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit"
+                        onclick="return confirm('この活動を削除すると、メンバー・活動日・受付データもすべて削除されます。本当に削除しますか？');">
+                    活動を削除
+                </button>
+            </form>
+            <a href="{{ url_for('activity_permissions', activity_id=activity.id) }}" class="button-link secondary-button">権限管理</a>
+            {% endif %}
+        </div>
+
+        <section class="dashboard-section">
+            <h2>本日の活動状況</h2>
+
+            {% if today_sessions_summary %}
+            <div class="today-summary-grid">
+                {% for summary in today_sessions_summary %}
+                <article class="today-summary-card">
+                    <h3>{{ summary.title or '活動' }}</h3>
+                    <p><strong>活動日：</strong>{{ summary.session_date }}</p>
+                    <p><strong>場所：</strong>{{ summary.place or '未設定' }}</p>
+                    <p class="today-attendance-count">
+                        <strong>出席人数：</strong>
+                        {{ summary.checked_count }} / {{ summary.member_count }}人
+                    </p>
+                    <p class="attendance-rate">
+                        <strong>出席率：</strong>{{ '%.1f' | format(summary.attendance_rate) }}%
+                    </p>
+                    {% if g.activity_role in ['owner', 'staff'] %}
+                    <a href="{{ url_for('reception', activity_id=activity.id, session_id=summary.id) }}"
+                       class="button-link">
+                        受付画面へ進む
+                    </a>
+                    {% endif %}
+                </article>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="no-today-session">本日の活動日は登録されていません。</p>
+            {% endif %}
+        </section>
+
+        <section class="dashboard-section">
+            <h2>次回の活動予定</h2>
+
+            {% if next_session %}
+            <article class="management-card next-session-card">
+                <div>
+                    <p class="session-date-label">{{ next_session.session_date }}</p>
+                    <h3>{{ next_session.title or '活動' }}</h3>
+                    <p><strong>場所：</strong>{{ next_session.place or '未設定' }}</p>
+                    <p><strong>メモ：</strong>{{ next_session.note or 'なし' }}</p>
+                </div>
+                {% if g.activity_role in ['owner', 'staff'] %}
+                <a href="{{ url_for('reception', activity_id=activity.id, session_id=next_session.id) }}"
+                   class="button-link">
+                    受付画面へ進む
+                </a>
+                {% endif %}
+            </article>
+            {% else %}
+            <p class="dashboard-empty-message">今後の活動日は登録されていません。</p>
+            {% endif %}
+        </section>
+
+        <section class="dashboard-section">
+            <h2>直近の活動履歴</h2>
+
+            {% if recent_sessions_summary %}
+            <div class="dashboard-table-wrapper management-card">
+                <table class="dashboard-table">
+                    <thead>
+                        <tr>
+                            <th>活動日</th>
+                            <th>活動タイトル</th>
+                            <th>出席人数</th>
+                            <th>出席率</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for summary in recent_sessions_summary %}
+                        <tr>
+                            <td>{{ summary.session_date }}</td>
+                            <td>{{ summary.title or '活動' }}</td>
+                            <td>{{ summary.checked_count }} / {{ summary.member_count }}人</td>
+                            <td class="rate-cell">{{ '%.1f' | format(summary.attendance_rate) }}%</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="dashboard-empty-message">過去の活動履歴はありません。</p>
+            {% endif %}
+        </section>
+
+        <section class="dashboard-section">
+            <h2>要確認メンバー</h2>
+            <p class="section-description">受付データがある活動日の出席率が50%未満のメンバーを、低い順に最大5名表示します。</p>
+
+            {% if low_attendance_members %}
+            <div class="dashboard-table-wrapper management-card warning-card">
+                <table class="dashboard-table">
+                    <thead>
+                        <tr>
+                            <th>名前</th>
+                            <th>所属グループ</th>
+                            <th>所属区分</th>
+                            <th>出席回数</th>
+                            <th>活動回数</th>
+                            <th>出席率</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for member in low_attendance_members %}
+                        <tr>
+                            <td>{{ member.name }}</td>
+                            <td>{{ member.group_name or '未設定' }}</td>
+                            <td>{{ member.category or '未設定' }}</td>
+                            <td>{{ member.checked_count }}回</td>
+                            <td>{{ member.total_count }}回</td>
+                            <td class="low-rate-cell">{{ '%.1f' | format(member.attendance_rate) }}%</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="dashboard-empty-message">出席率が50%未満のメンバーはいません。</p>
+            {% endif %}
+        </section>
+
+        <div class="management-summary-grid">
+            <section class="dashboard-section management-card">
+                <h2>所属グループ別出席率</h2>
+
+                {% if group_name_summaries %}
+                <div class="dashboard-table-wrapper">
+                    <table class="dashboard-table compact-table">
+                        <thead>
+                            <tr>
+                                <th>所属グループ</th>
+                                <th>出席回数合計</th>
+                                <th>受付データ数</th>
+                                <th>出席率</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for summary in group_name_summaries %}
+                            <tr>
+                                <td>{{ summary.group_name }}</td>
+                                <td>{{ summary.checked_count }}回</td>
+                                <td>{{ summary.total_count }}件</td>
+                                <td class="rate-cell">{{ '%.1f' | format(summary.attendance_rate) }}%</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="dashboard-empty-message">集計対象のメンバーがいません。</p>
+                {% endif %}
+            </section>
+
+            <section class="dashboard-section management-card">
+                <h2>所属区分別出席率</h2>
+
+                {% if category_summaries %}
+                <div class="dashboard-table-wrapper">
+                    <table class="dashboard-table compact-table">
+                        <thead>
+                            <tr>
+                                <th>所属区分</th>
+                                <th>出席回数合計</th>
+                                <th>受付データ数</th>
+                                <th>出席率</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for summary in category_summaries %}
+                            <tr>
+                                <td>{{ summary.category }}</td>
+                                <td>{{ summary.checked_count }}回</td>
+                                <td>{{ summary.total_count }}件</td>
+                                <td class="rate-cell">{{ '%.1f' | format(summary.attendance_rate) }}%</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="dashboard-empty-message">集計対象のメンバーがいません。</p>
+                {% endif %}
+            </section>
+        </div>
+
+        <section class="dashboard-section">
+            <h2>ダッシュボード</h2>
+
+            <div class="dashboard-cards">
+                <div class="dashboard-card">
+                    <p class="card-title">登録メンバー数</p>
+                    <p class="card-number">{{ member_count }}</p>
+                    <p class="card-unit">人</p>
+                </div>
+
+                <div class="dashboard-card">
+                    <p class="card-title">活動日数</p>
+                    <p class="card-number">{{ session_count }}</p>
+                    <p class="card-unit">回</p>
+                </div>
+            </div>
+        </section>
+
+        <div class="dashboard-menu">
+            <h2>メニュー</h2>
+
+            <a href="/activities/{{ activity.id }}/members" class="menu-button">メンバー管理</a>
+            <a href="/activities/{{ activity.id }}/sessions" class="menu-button">活動日管理</a>
+            <a href="/activities/{{ activity.id }}/attendance/summary" class="menu-button">出席率集計</a>
+            <a href="/activities/{{ activity.id }}/attendance/group_summary" class="menu-button">所属グループ・所属区分別集計</a>
+            <a href="{{ url_for('activity_audit_logs', activity_id=activity.id) }}" class="menu-button">操作ログ</a>
+            <a href="/" class="menu-button">活動一覧に戻る</a>
+        </div>
+    </div>
+</body>
+</html>

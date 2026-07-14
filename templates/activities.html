@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>活動一覧</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>活動一覧</h1>
+
+        <p class="login-info">
+            ログイン中：{{ session.username }}
+            <a href="{{ url_for('account') }}">アカウント設定</a>
+            <a href="/logout">ログアウト</a>
+        </p>
+
+        <a href="/activities/add" class="button-link">新しい活動を作成</a>
+
+        {% if activities %}
+            <div class="activity-list">
+                {% for activity in activities %}
+                <div class="activity-card">
+                    <h2>{{ activity.name }}</h2>
+
+                    {% if activity.description %}
+                    <p>{{ activity.description }}</p>
+                    {% else %}
+                    <p>説明は登録されていません。</p>
+                    {% endif %}
+
+                    <a href="/activities/{{ activity.id }}" class="button-link">
+                        この活動を開く
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p>まだ活動が登録されていません。</p>
+        {% endif %}
+    </div>
+</body>
+</html>

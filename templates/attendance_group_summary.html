@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>所属グループ・所属区分別集計</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="page-header">
+            <h1>所属グループ・所属区分別集計</h1>
+            <a href="/activities/{{ activity.id }}" class="top-button">活動トップに戻る</a>
+        </div>
+
+        <p>
+            <strong>活動名：</strong>{{ activity.name }}
+        </p>
+
+        <h2>所属グループ別集計</h2>
+
+        {% if group_name_summaries %}
+        <table>
+            <thead>
+                <tr>
+                    <th>所属グループ</th>
+                    <th>受付済み回数</th>
+                    <th>対象回数</th>
+                    <th>出席率</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for summary in group_name_summaries %}
+                <tr>
+                    <td>{{ summary.group_name or '未設定' }}</td>
+                    <td>{{ summary.checked_count }}</td>
+                    <td>{{ summary.total_count }}</td>
+                    <td>
+                        {% if summary.total_count == 0 %}
+                            0%
+                        {% else %}
+                            {{ (summary.checked_count * 100 / summary.total_count) | round(1) }}%
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+            <p>まだ集計データがありません。</p>
+        {% endif %}
+
+        <h2>所属区分別集計</h2>
+
+        {% if category_summaries %}
+        <table>
+            <thead>
+                <tr>
+                    <th>所属区分</th>
+                    <th>受付済み回数</th>
+                    <th>対象回数</th>
+                    <th>出席率</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for summary in category_summaries %}
+                <tr>
+                    <td>{{ summary.category or '未設定' }}</td>
+                    <td>{{ summary.checked_count }}</td>
+                    <td>{{ summary.total_count }}</td>
+                    <td>
+                        {% if summary.total_count == 0 %}
+                            0%
+                        {% else %}
+                            {{ (summary.checked_count * 100 / summary.total_count) | round(1) }}%
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+            <p>まだ集計データがありません。</p>
+        {% endif %}
+    </div>
+</body>
+</html>

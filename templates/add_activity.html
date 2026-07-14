@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>活動作成</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="page-header">
+            <h1>活動作成</h1>
+            <a href="/" class="top-button">活動一覧に戻る</a>
+        </div>
+
+        <form method="post" action="/activities/add">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <label>活動名</label>
+            <input type="text" name="name" required placeholder="例：サークル活動受付">
+
+            <label>説明</label>
+            <textarea name="description" placeholder="例：サークル活動の受付・出席管理"></textarea>
+
+            <button type="submit">作成</button>
+        </form>
+    </div>
+</body>
+</html>

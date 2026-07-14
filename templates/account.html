@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>アカウント設定</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="page-header">
+            <h1>アカウント設定</h1>
+            <a href="{{ url_for('index') }}" class="top-button">活動一覧へ戻る</a>
+        </div>
+
+        {% if message %}
+        <p class="success-message">{{ message }}</p>
+        {% endif %}
+        {% if error %}
+        <p class="error-message">{{ error }}</p>
+        {% endif %}
+
+        <section class="account-summary">
+            <h2>現在の登録情報</h2>
+            <dl>
+                <dt>ユーザー名</dt>
+                <dd>{{ user.username }}</dd>
+                <dt>メールアドレス</dt>
+                <dd>{{ user.email or '未登録' }}</dd>
+            </dl>
+        </section>
+
+        <section class="account-form">
+            <h2>ユーザー名を変更</h2>
+            <form method="post" action="{{ url_for('update_username') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <label for="username">新しいユーザー名</label>
+                <input id="username" name="username" type="text" value="{{ user.username }}" maxlength="100" required>
+                <button type="submit">変更する</button>
+            </form>
+        </section>
+
+        <section class="account-form">
+            <h2>メールアドレスを変更</h2>
+            <form method="post" action="{{ url_for('update_email') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <label for="email">新しいメールアドレス</label>
+                <input id="email" name="email" type="email" value="{{ user.email or '' }}" maxlength="255" required>
+                <button type="submit">変更する</button>
+            </form>
+        </section>
+
+        <section class="account-form">
+            <h2>パスワードを変更</h2>
+            <form method="post" action="{{ url_for('update_password') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <label for="current_password">現在のパスワード</label>
+                <input id="current_password" name="current_password" type="password" autocomplete="current-password" required>
+                <label for="new_password">新しいパスワード（8文字以上）</label>
+                <input id="new_password" name="new_password" type="password" minlength="8" autocomplete="new-password" required>
+                <label for="confirm_password">新しいパスワード（確認）</label>
+                <input id="confirm_password" name="confirm_password" type="password" minlength="8" autocomplete="new-password" required>
+                <button type="submit">変更する</button>
+            </form>
+        </section>
+
+        <section class="account-form danger-zone">
+            <h2>アカウント削除</h2>
+            <p>アカウントを削除するとログインできなくなります。ユーザーと活動データは復元の可能性を残すため保持されますが、通常の画面からは利用できません。</p>
+            <p>削除するには、現在のパスワードと確認用文字列「削除します」を入力してください。</p>
+            <form method="post" action="{{ url_for('delete_account') }}"
+                  onsubmit="return confirm('本当にアカウントを削除しますか？削除後はログインできなくなります。');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <label for="delete_current_password">現在のパスワード</label>
+                <input id="delete_current_password" name="current_password" type="password" autocomplete="current-password" required>
+                <label for="confirm_text">確認用文字列</label>
+                <input id="confirm_text" name="confirm_text" type="text" placeholder="削除します" required>
+                <button type="submit" class="danger-button">アカウントを削除する</button>
+            </form>
+        </section>
+    </div>
+</body>
+</html>

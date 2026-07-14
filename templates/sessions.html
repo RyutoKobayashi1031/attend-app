@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>活動日管理</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="page-header">
+            <h1>活動日管理</h1>
+            <a href="/activities/{{ activity.id }}" class="top-button">活動トップに戻る</a>
+        </div>
+
+        <p>
+            <strong>活動名：</strong>{{ activity.name }}
+        </p>
+
+        {% if g.activity_role in ['owner', 'staff'] %}
+            <a href="/activities/{{ activity.id }}/sessions/add" class="button-link">活動日を追加</a>
+            <a href="/activities/{{ activity.id }}/sessions/add_bulk" class="button-link">活動日をまとめて追加</a>
+        {% endif %}
+
+        {% if sessions %}
+        <table>
+            <thead>
+                <tr>
+                    <th>活動日</th>
+                    <th>タイトル</th>
+                    <th>場所</th>
+                    <th>備考</th>
+                    <th>受付</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for session_item in sessions %}
+                <tr>
+                    <td>{{ session_item.session_date }}</td>
+                    <td>{{ session_item.title }}</td>
+                    <td>{{ session_item.place }}</td>
+                    <td>{{ session_item.note }}</td>
+                    <td>
+                        {% if g.activity_role in ['owner', 'staff'] %}
+                        <a href="/activities/{{ activity.id }}/sessions/{{ session_item.id }}/reception">
+                            受付画面
+                        </a>
+                        {% else %}-{% endif %}
+                    </td>
+                    <td>
+                        {% if g.activity_role in ['owner', 'staff'] %}
+                        <a href="/activities/{{ activity.id }}/sessions/edit/{{ session_item.id }}">
+                            編集
+                        </a>
+                        {% endif %}
+
+                        {% if g.activity_role == 'owner' %}
+                        <form method="post"
+                              action="/activities/{{ activity.id }}/sessions/delete/{{ session_item.id }}"
+                              style="display:inline;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" onclick="return confirm('本当に削除しますか？');">
+                                削除
+                            </button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+            <p>まだ活動日が登録されていません。</p>
+        {% endif %}
+    </div>
+</body>
+</html>

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>権限管理</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="page-header">
+            <h1>権限管理</h1>
+            <a href="{{ url_for('activity_dashboard', activity_id=activity.id) }}" class="top-button">活動トップに戻る</a>
+        </div>
+        <p><strong>活動名：</strong>{{ activity.name }}</p>
+        {% if message %}<p class="success-message">{{ message }}</p>{% endif %}
+        {% if error %}<p class="error-message">{{ error }}</p>{% endif %}
+
+        <section class="account-form">
+            <h2>ユーザーを追加</h2>
+            <form method="post" action="{{ url_for('add_activity_permission', activity_id=activity.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <label for="identifier">ユーザー名またはメールアドレス</label>
+                <input id="identifier" name="identifier" type="text" required>
+                <label for="role">権限</label>
+                <select id="role" name="role" required>
+                    <option value="staff">staff（受付担当）</option>
+                    <option value="viewer">viewer（閲覧のみ）</option>
+                </select>
+                <button type="submit">追加する</button>
+            </form>
+        </section>
+
+        <div class="dashboard-table-wrapper">
+            <table class="dashboard-table">
+                <thead><tr><th>ユーザー名</th><th>メールアドレス</th><th>権限</th><th>操作</th></tr></thead>
+                <tbody>
+                    {% for item in activity_users %}
+                    <tr>
+                        <td>{{ item.username }}</td>
+                        <td>{{ item.email or '-' }}</td>
+                        <td>{{ item.role }}</td>
+                        <td>
+                            {% if item.role == 'owner' %}
+                                変更不可
+                            {% else %}
+                            <form method="post" action="{{ url_for('update_activity_permission', activity_id=activity.id, activity_user_id=item.id) }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <select name="role">
+                                    <option value="staff" {% if item.role == 'staff' %}selected{% endif %}>staff</option>
+                                    <option value="viewer" {% if item.role == 'viewer' %}selected{% endif %}>viewer</option>
+                                </select>
+                                <button type="submit">変更</button>
+                            </form>
+                            <form method="post" action="{{ url_for('delete_activity_permission', activity_id=activity.id, activity_user_id=item.id) }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" onclick="return confirm('このユーザーの権限を削除しますか？');">削除</button>
+                            </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

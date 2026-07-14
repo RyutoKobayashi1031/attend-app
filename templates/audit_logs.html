@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>操作ログ</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="page-header">
+            <h1>操作ログ</h1>
+            <a href="{{ url_for('activity_dashboard', activity_id=activity.id) }}" class="top-button">活動トップに戻る</a>
+        </div>
+        <p><strong>活動名：</strong>{{ activity.name }}</p>
+        <p class="section-description">新しい順に最大100件表示します。</p>
+
+        {% if audit_logs %}
+        <div class="dashboard-table-wrapper">
+            <table class="dashboard-table">
+                <thead>
+                    <tr>
+                        <th>日時</th>
+                        <th>操作ユーザー</th>
+                        <th>操作種別</th>
+                        <th>対象種別</th>
+                        <th>説明</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in audit_logs %}
+                    <tr>
+                        <td>{{ log.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                        <td>{{ log.username or '削除済みユーザー' }}</td>
+                        <td>{{ log.action }}</td>
+                        <td>{{ log.target_type or '-' }}</td>
+                        <td>{{ log.description or '-' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="dashboard-empty-message">操作ログはまだありません。</p>
+        {% endif %}
+    </div>
+</body>
+</html>

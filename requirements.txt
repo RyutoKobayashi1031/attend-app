@@ -1,0 +1,5 @@
+Flask
+Flask-WTF
+psycopg2
+Werkzeug
+python-dotenv

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>メンバー管理</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="page-header">
+            <h1>メンバー管理</h1>
+            <a href="/activities/{{ activity.id }}" class="top-button">活動トップに戻る</a>
+        </div>
+
+        <p>
+            <strong>活動名：</strong>{{ activity.name }}
+        </p>
+
+        <div class="member-action-buttons">
+            {% if g.activity_role in ['owner', 'staff'] %}
+            <a href="{{ url_for('add_member', activity_id=activity.id) }}" class="button-link">
+                メンバーを追加
+            </a>
+            <a href="{{ url_for('import_members_csv', activity_id=activity.id) }}" class="button-link secondary-button">
+                CSVインポート
+            </a>
+            {% endif %}
+        </div>
+
+        {% if members %}
+        <table>
+            <thead>
+                <tr>
+                    <th>名前</th>
+                    <th>所属グループ</th>
+                    <th>所属区分</th>
+                    <th>備考</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for member in members %}
+                <tr>
+                    <td>{{ member.name }}</td>
+                    <td>{{ member.group_name or '-' }}</td>
+                    <td>{{ member.category or '-' }}</td>
+                    <td>{{ member.note }}</td>
+                    <td>
+                        {% if g.activity_role in ['owner', 'staff'] %}
+                        <a href="/activities/{{ activity.id }}/members/edit/{{ member.id }}">
+                            編集
+                        </a>
+                        {% endif %}
+
+                        {% if g.activity_role == 'owner' %}
+                        <form method="post"
+                              action="/activities/{{ activity.id }}/members/delete/{{ member.id }}"
+                              style="display:inline;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" onclick="return confirm('本当に削除しますか？');">
+                                削除
+                            </button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+            <p>まだメンバーが登録されていません。</p>
+        {% endif %}
+    </div>
+</body>
+</html>

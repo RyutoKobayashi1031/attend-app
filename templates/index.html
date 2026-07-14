@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ダッシュボード</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>サークル活動受付・出席管理システム</h1>
+
+        <p class="login-info">
+            ログイン中：{{ session.username }}
+            <a href="/logout">ログアウト</a>
+        </p>
+
+        <div class="dashboard-section">
+            <h2>本日の活動</h2>
+
+            {% if today_session %}
+                <div class="next-session">
+                    <p><strong>活動日：</strong>{{ today_session.session_date }}</p>
+                    <p><strong>タイトル：</strong>{{ today_session.title }}</p>
+                    <p><strong>場所：</strong>{{ today_session.place }}</p>
+                    <p><strong>備考：</strong>{{ today_session.note }}</p>
+
+                    <a href="/sessions/{{ today_session.id }}/reception" class="button-link">
+                        受付画面を開く
+                    </a>
+                </div>
+            {% else %}
+                <p>本日の活動は登録されていません。</p>
+                <a href="/sessions/add" class="button-link">本日の活動を登録する</a>
+            {% endif %}
+        </div>
+
+        <h2>ダッシュボード</h2>
+
+        <div class="dashboard-cards">
+
+            <div class="dashboard-card">
+                <p class="card-title">活動日数</p>
+                <p class="card-number">{{ session_count }}</p>
+                <p class="card-unit">回</p>
+            </div>
+
+            <div class="dashboard-card">
+                <p class="card-title">受付済み件数</p>
+                <p class="card-number">{{ checked_count }}</p>
+                <p class="card-unit">件</p>
+            </div>
+
+            <div class="dashboard-card">
+                <p class="card-title">全体出席率</p>
+                <p class="card-number">{{ attendance_rate }}</p>
+                <p class="card-unit">%</p>
+            </div>
+        </div>
+
+        <div class="dashboard-section">
+            <h2>最近登録された活動日</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>活動日</th>
+                        <th>タイトル</th>
+                        <th>場所</th>
+                        <th>受付</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for session_item in recent_sessions %}
+                    <tr>
+                        <td>{{ session_item.session_date }}</td>
+                        <td>{{ session_item.title }}</td>
+                        <td>{{ session_item.place }}</td>
+                        <td>
+                            <a href="/sessions/{{ session_item.id }}/reception" class="button-link">
+                                受付画面
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="dashboard-menu">
+            <h2>メニュー</h2>
+
+            <a href="/members" class="menu-button">メンバー管理</a>
+            <a href="/sessions" class="menu-button">活動日管理</a>
+            <a href="/attendance/summary" class="menu-button">出席率集計</a>
+            <a href="/attendance/group_summary" class="menu-button">所属グループ・所属区分別集計</a>
+        </div>
+    </div>
+</body>
+</html>

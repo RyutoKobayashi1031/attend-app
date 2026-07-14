@@ -1,0 +1,25 @@
+# Local secrets
+.env
+userKobayashi1031.txt
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+env/
+
+# Generated CSV files (keep only the directory placeholder)
+csv/
+!csv/
+csv/*
+csv/*.csv
+!csv/.gitkeep
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Logs
+*.log

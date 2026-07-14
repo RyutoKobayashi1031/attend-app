@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>受付画面</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="page-header">
+            <h1>受付画面</h1>
+            <a href="/activities/{{ activity.id }}/sessions" class="top-button">活動日管理に戻る</a>
+        </div>
+
+        <p>
+            <strong>活動名：</strong>{{ activity.name }}
+        </p>
+
+        <p>
+            活動日：{{ session.session_date }}　
+            {{ session.title }}　
+            {{ session.place }}
+        </p>
+
+        <div class="summary">
+            <p>合計：{{ counts.total_count }}人</p>
+            <p>受付済み：{{ counts.checked_count }}人</p>
+            <p>未受付：{{ counts.unchecked_count }}人</p>
+        </div>
+
+        <a href="/activities/{{ activity.id }}/sessions/{{ session.id }}/export_csv" class="button-link">
+            CSV出力
+        </a>
+
+        <form method="get"
+              action="/activities/{{ activity.id }}/sessions/{{ session.id }}/reception"
+              class="search-form">
+            <label>名前検索</label>
+            <input type="text" name="keyword" value="{{ keyword }}" placeholder="名前を入力">
+
+            <input type="hidden" name="status_filter" value="{{ status_filter }}">
+
+            <label>所属グループ</label>
+            <select name="group_name_filter">
+                <option value="all" {% if group_name_filter == "all" %}selected{% endif %}>すべての所属グループ</option>
+                {% for group_name in group_names %}
+                <option value="{{ group_name }}" {% if group_name_filter == group_name %}selected{% endif %}>{{ group_name }}</option>
+                {% endfor %}
+            </select>
+
+            <label>所属区分</label>
+            <select name="category_filter">
+                <option value="all" {% if category_filter == "all" %}selected{% endif %}>すべての所属区分</option>
+                {% for category in categories %}
+                <option value="{{ category }}" {% if category_filter == category %}selected{% endif %}>{{ category }}</option>
+                {% endfor %}
+            </select>
+
+            <button type="submit">検索</button>
+            <a href="/activities/{{ activity.id }}/sessions/{{ session.id }}/reception">検索解除</a>
+        </form>
+
+        <div class="filter-area">
+            <a href="/activities/{{ activity.id }}/sessions/{{ session.id }}/reception?keyword={{ keyword }}&status_filter=all&group_name_filter={{ group_name_filter }}&category_filter={{ category_filter }}"
+               class="filter-link {% if status_filter == 'all' %}active{% endif %}">
+                全員
+            </a>
+
+            <a href="/activities/{{ activity.id }}/sessions/{{ session.id }}/reception?keyword={{ keyword }}&status_filter=unchecked&group_name_filter={{ group_name_filter }}&category_filter={{ category_filter }}"
+               class="filter-link {% if status_filter == 'unchecked' %}active{% endif %}">
+                未受付のみ
+            </a>
+
+            <a href="/activities/{{ activity.id }}/sessions/{{ session.id }}/reception?keyword={{ keyword }}&status_filter=checked&group_name_filter={{ group_name_filter }}&category_filter={{ category_filter }}"
+               class="filter-link {% if status_filter == 'checked' %}active{% endif %}">
+                受付済みのみ
+            </a>
+        </div>
+
+        <table class="pc-table">
+            <thead>
+                <tr>
+                    <th>名前</th>
+                    <th>所属グループ</th>
+                    <th>所属区分</th>
+                    <th>状態</th>
+                    <th>受付時刻</th>
+                    <th>備考</th>
+                    <th>受付操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for attendance in attendances %}
+                <tr>
+                    <td>{{ attendance.name }}</td>
+                    <td>{{ attendance.group_name or '-' }}</td>
+                    <td>{{ attendance.category or '-' }}</td>
+
+                    <td>
+                        {% if attendance.status == "checked" %}
+                            受付済み
+                        {% else %}
+                            未受付
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {% if attendance.checked_in_at %}
+                            {{ attendance.checked_in_at }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        <form method="post"
+                              action="/activities/{{ activity.id }}/attendance/{{ attendance.id }}/update_note"
+                              class="note-form">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="text" name="note" value="{{ attendance.note or '' }}" placeholder="備考を入力">
+                            <button type="submit">保存</button>
+                        </form>
+                    </td>
+
+                    <td>
+                        {% if attendance.status == "unchecked" %}
+                        <form method="post" action="/activities/{{ activity.id }}/attendance/{{ attendance.id }}/check_in">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit">受付済みにする</button>
+                        </form>
+                        {% else %}
+                        <form method="post" action="/activities/{{ activity.id }}/attendance/{{ attendance.id }}/cancel_check_in">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit">未受付に戻す</button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="mobile-cards">
+            {% for attendance in attendances %}
+            <div class="reception-card">
+                <div class="reception-card-header">
+                    <h2>{{ attendance.name }}</h2>
+
+                    {% if attendance.status == "checked" %}
+                    <span class="status-badge checked">受付済み</span>
+                    {% else %}
+                    <span class="status-badge unchecked">未受付</span>
+                    {% endif %}
+                </div>
+
+                <p class="member-info">
+                    {{ attendance.group_name or '-' }} / {{ attendance.category or '-' }}
+                </p>
+
+                <p>
+                    <strong>受付時刻：</strong>
+                    {% if attendance.checked_in_at %}
+                        {{ attendance.checked_in_at }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </p>
+
+                <form method="post"
+                      action="/activities/{{ activity.id }}/attendance/{{ attendance.id }}/update_note"
+                      class="mobile-note-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <label>備考</label>
+                    <input type="text" name="note" value="{{ attendance.note or '' }}" placeholder="備考を入力">
+                    <button type="submit">備考を保存</button>
+                </form>
+
+                {% if attendance.status == "unchecked" %}
+                <form method="post" action="/activities/{{ activity.id }}/attendance/{{ attendance.id }}/check_in">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="main-action-button">受付済みにする</button>
+                </form>
+                {% else %}
+                <form method="post" action="/activities/{{ activity.id }}/attendance/{{ attendance.id }}/cancel_check_in">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="sub-action-button">未受付に戻す</button>
+                </form>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>
